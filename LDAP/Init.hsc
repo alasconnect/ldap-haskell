@@ -24,6 +24,7 @@ module LDAP.Init(ldapOpen,
                  ldapInit,
                  ldapInitialize,
                  ldapSimpleBind,
+                 ldapSimpleUnbind,
                  ldapExternalSaslBind)
 where
 
@@ -107,6 +108,15 @@ ldapSimpleBind ld dn passwd =
            return ()
                          )))
 
+{- | Unbind from the remote server. -}
+ldapSimpleUnbind :: LDAP          -- ^ LDAP Object
+               -> IO ()
+ldapSimpleUnbind ld =
+    withLDAPPtr ld (\ptr -> do
+            checkLE "ldapSimpleUnbind" ld (ldap_unbind ptr)
+            return ()
+    )
+
 {- | Bind with the SASL EXTERNAL mechanism. -}
 ldapExternalSaslBind :: LDAP   -- ^ LDAP Object
                      -> String -- ^ Authorization identity (UTF-8 encoded; pass "" to derive it from the authentication identity)
@@ -121,7 +131,6 @@ ldapExternalSaslBind ld authz =
 foreign import ccall unsafe "ldap.h ldap_init"
   cldap_init :: CString -> CInt -> IO LDAPPtr
 
-
 foreign import ccall safe "ldap.h ldap_open"
   cldap_open :: CString -> CInt -> IO LDAPPtr
 
@@ -130,6 +139,9 @@ foreign import ccall unsafe "ldap.h ldap_initialize"
 
 foreign import ccall safe "ldap.h ldap_simple_bind_s"
   ldap_simple_bind_s :: LDAPPtr -> CString -> CString -> IO LDAPInt
+
+foreign import ccall unsafe "ldap.h ldap_unbind"
+  ldap_unbind :: LDAPPtr -> IO LDAPInt
 
 foreign import ccall safe "sasl_external.h external_sasl_bind"
   external_sasl_bind :: LDAPPtr -> CString -> Int -> IO LDAPInt
